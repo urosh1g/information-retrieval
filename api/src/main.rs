@@ -25,6 +25,7 @@ const IDX_NAME: &str = "testindex";
 struct SearchQuery {
     property: String,
     value: String,
+    from: Option<i64>,
 }
 
 #[get("/health-check")]
@@ -69,7 +70,7 @@ pub async fn search(app_data: web::Data<AppData>, query: web::Query<SearchQuery>
     let query = query.into_inner();
     let results = client
         .search(SearchParts::Index(&[IDX_NAME]))
-        .from(0)
+        .from(query.from.unwrap_or(0))
         .size(10)
         .body(json!({
             "query": {
