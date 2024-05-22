@@ -1,9 +1,9 @@
-import { ElasticResponse } from "@/models/search-response"
+import { Doc, ElasticResponse } from "@/models/search-response"
 import { Stack } from "@mui/material";
 import FileInfo from "./FileInfo";
 
 type Props = {
-  files: ElasticResponse[];
+  files: Doc[];
 }
 
 export default function FileList({ files }: Props) {

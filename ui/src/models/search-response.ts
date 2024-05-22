@@ -1,4 +1,4 @@
-export type ElasticResponse = {
+export type Doc = {
   _id: string;
   _index: string;
   _score: number;
@@ -8,4 +8,9 @@ export type ElasticResponse = {
     size: number;
     timestamp: number;
   }
+}
+
+export type ElasticResponse = {
+  docs: Doc[];
+  total: number;
 };
