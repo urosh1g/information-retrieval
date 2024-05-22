@@ -68,10 +68,20 @@ pub async fn index(mut payload: Multipart, app_data: web::Data<AppData>) -> Http
 pub async fn search(app_data: web::Data<AppData>, query: web::Query<SearchQuery>) -> HttpResponse {
     let client = app_data.elasticsearch_client.clone();
     let query = query.into_inner();
+    let total = client
+        .count(elasticsearch::CountParts::Index(&[IDX_NAME]))
+        .q(&format!("{}:{}", query.property, query.value))
+        .send()
+        .await
+        .unwrap()
+        .json::<Value>()
+        .await
+        .unwrap();
+    let total = total["count"].clone();
     let results = client
         .search(SearchParts::Index(&[IDX_NAME]))
-        .from(query.from.unwrap_or(0))
-        .size(10)
+        .from(query.from.unwrap_or(1) - 1)
+        .size(5)
         .body(json!({
             "query": {
                 "match": {
@@ -88,7 +98,12 @@ pub async fn search(app_data: web::Data<AppData>, query: web::Query<SearchQuery>
             for hit in body["hits"]["hits"].as_array().unwrap() {
                 docs.push(hit);
             }
-            HttpResponse::Ok().json(docs).into()
+            HttpResponse::Ok()
+                .json(json!({
+                    "docs": docs,
+                    "total": total,
+                }))
+                .into()
         }
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
